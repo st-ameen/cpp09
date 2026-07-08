@@ -22,7 +22,6 @@ class PmergeMe
         void    parseInput(int argc, char **argv);
         void    run();
 
-        /* ponytail: exposed to public so the anonymous namespace template in .cpp can access it */
         std::vector<size_t> buildJacobsthalInsertionOrder(size_t pendCount);
 
     private:
