@@ -142,8 +142,6 @@ namespace {
         }
 
         Container winners, losers;
-        /* ponytail: reserve() dropped to unify template without SFINAE. Negligible impact for n=3000.
-           Add inline template specialization for preallocation if profiling shows vector bottlenecks. */
         for (size_t i = 0; i < cont.size() / 2; ++i)
         {
             unsigned int first = cont[2 * i], second = cont[2 * i + 1];

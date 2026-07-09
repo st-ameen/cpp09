@@ -91,7 +91,7 @@ void BitcoinExchange::loadDatabase(const std::string& filename) {
         std::pair<std::string, double> prex;
         std::size_t pos = line.find(",");
         if (pos == std::string::npos)
-            continue; // skip malformed db lines instead of aborting the whole load
+            continue;
 
         prex.first = line.substr(0, pos);
         try {
@@ -121,7 +121,7 @@ void BitcoinExchange::processInput(const std::string& filename) const {
         if (line.empty())
             continue;
         if (line == "date | value")
-            continue; // skip header
+            continue;
 
         std::size_t sep = line.find(" | ");
         if (sep == std::string::npos) {
@@ -157,18 +157,14 @@ void BitcoinExchange::processInput(const std::string& filename) const {
         std::map<std::string, double>::const_iterator it = _data.lower_bound(dateStr);
 
         if (it == _data.end()) {
-            // dateStr is after every date in db -> use the last (most recent) entry
             --it;
         } else if (it->first != dateStr) {
-            // no exact match, lower_bound gave us the first key >= dateStr,
-            // we need the closest one that is < dateStr
             if (it == _data.begin()) {
                 std::cerr << "Error: no database entry before this date => " << dateStr << std::endl;
                 continue;
             }
             --it;
         }
-        // else exact match, use it as is
 
         double result = value * it->second;
         std::cout << dateStr << " => " << value << " = " << result << std::endl;

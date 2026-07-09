@@ -42,7 +42,7 @@ int RPN::evaluate(const std::string& expression) const {
                 }
                 rpnStack.push(left / right);
             }
-        } 
+        }
         else {
             int number = 0;
             if (!isStrictNumber(token, number)) {
