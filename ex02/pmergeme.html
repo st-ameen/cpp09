@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PmergeMe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1115;
+    --bg-alt:#14171D;
+    --surface:#181B22;
+    --surface-2:#1F232C;
+    --border:#282D38;
+    --text:#E7E9EE;
+    --text-muted:#8B92A3;
+    --text-faint:#565D6C;
+
+    --winner:#E8A33D;
+    --winner-bg:rgba(232,163,61,0.14);
+    --loser:#7C8CF8;
+    --loser-bg:rgba(124,140,248,0.14);
+    --placed:#49B888;
+    --placed-bg:rgba(73,184,136,0.14);
+    --accent:#F45B69;
+    --accent-bg:rgba(244,91,105,0.14);
+
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.55;
+  }
+  ::selection{ background:var(--loser); color:#0F1115; }
+
+  .page{ max-width:980px; margin:0 auto; padding:56px 24px 96px; }
+
+  /* ---------- Hero ---------- */
+  .hero{ margin-bottom:44px; }
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    letter-spacing:0.06em;
+    color:var(--text-muted);
+    text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .eyebrow span{ color:var(--placed); }
+  h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(28px, 4.4vw, 42px);
+    line-height:1.12;
+    margin:0 0 16px;
+    letter-spacing:-0.01em;
+  }
+  .thesis{
+    font-size:16.5px;
+    color:var(--text-muted);
+    max-width:640px;
+    margin:0 0 26px;
+  }
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:18px;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    color:var(--text-muted);
+    padding-top:18px;
+    border-top:1px solid var(--border);
+  }
+  .legend-item{ display:flex; align-items:center; gap:7px; }
+  .swatch{ width:11px; height:11px; border-radius:3px; display:inline-block; }
+
+  /* ---------- Stage ---------- */
+  .stage-section{ margin-bottom:8px; }
+  .stage-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:16px;
+  }
+  .step-label{
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--text-muted);
+  }
+  .step-label b{ color:var(--text); font-weight:600;}
+  .controls{ display:flex; gap:8px; }
+  .controls button{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:8px 14px;
+    border-radius:7px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .controls button:hover{ border-color:var(--loser); }
+  .controls button:disabled{ opacity:0.35; cursor:default; }
+  .controls button:disabled:hover{ border-color:var(--border); }
+  #playBtn{ min-width:64px; }
+  .controls button:focus-visible, .dot:focus-visible, .code-card:focus-visible{
+    outline:2px solid var(--loser); outline-offset:2px;
+  }
+
+  .frames{
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .frame{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:14px 16px;
+    opacity:0.4;
+    transform:scale(0.99);
+    transition:opacity .25s ease, border-color .25s ease, transform .25s ease;
+  }
+  .frame.active{
+    opacity:1;
+    border-color:var(--loser);
+    box-shadow:0 0 0 1px rgba(124,140,248,0.25);
+    transform:scale(1);
+  }
+  .frame-title{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--text-muted);
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .frame.active .frame-title{ color:var(--loser); }
+  .frame-badge{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:5px;
+    padding:1px 7px;
+    font-size:11px;
+  }
+
+  .row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .row:last-child{ margin-bottom:0; }
+  .row-label{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-faint);
+    width:64px;
+    flex-shrink:0;
+  }
+  .chips{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+
+  .chip{
+    font-family:var(--font-mono);
+    font-weight:500;
+    font-size:14px;
+    min-width:34px;
+    height:34px;
+    padding:0 4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:7px;
+    border:1px solid transparent;
+    transition:transform .2s ease;
+  }
+  .chip.neutral{ background:var(--surface-2); color:var(--text); border-color:var(--border); }
+  .chip.winner{ background:var(--winner-bg); color:var(--winner); border-color:rgba(232,163,61,0.35); }
+  .chip.loser{ background:var(--loser-bg); color:var(--loser); border-color:rgba(124,140,248,0.35); }
+  .chip.placed{ background:var(--placed-bg); color:var(--placed); border-color:rgba(73,184,136,0.35); }
+  .chip.window{ box-shadow: inset 0 -3px 0 var(--accent); }
+  .chip.boundary{ border-color:var(--accent); }
+  .chip.dropping{
+    animation:drop .5s ease;
+    background:var(--accent-bg); color:var(--accent); border-color:rgba(244,91,105,0.4);
+  }
+  @keyframes drop{
+    0%{ transform:translateY(-14px); opacity:0; }
+    100%{ transform:translateY(0); opacity:1; }
+  }
+  .chip.rank{ position:relative; }
+  .rank-badge{
+    font-family:var(--font-mono);
+    font-size:10px;
+    color:var(--bg);
+    background:var(--accent);
+    border-radius:50%;
+    width:15px; height:15px;
+    display:flex; align-items:center; justify-content:center;
+    margin-right:6px;
+    flex-shrink:0;
+  }
+
+  .arrow-note{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--text-faint);
+    padding:2px 0;
+  }
+  .arrow-note b{ color:var(--accent); }
+
+  .step-desc{
+    font-size:15px;
+    color:var(--text);
+    margin:16px 2px 6px;
+    min-height:44px;
+  }
+  .step-desc code{
+    font-family:var(--font-mono);
+    font-size:0.92em;
+    background:var(--surface-2);
+    padding:1px 6px;
+    border-radius:5px;
+    color:var(--loser);
+  }
+
+  .progress-dots{ display:flex; gap:6px; flex-wrap:wrap; margin:10px 2px 48px; }
+  .dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--border); border:none; cursor:pointer; padding:0;
+    transition:background .15s, transform .15s;
+  }
+  .dot:hover{ transform:scale(1.3); }
+  .dot.done{ background:var(--text-faint); }
+  .dot.current{ background:var(--loser); transform:scale(1.4); }
+
+  /* ---------- Code panels ---------- */
+  .code-section{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+    margin-bottom:56px;
+  }
+  .code-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+    opacity:0.4;
+    transition:opacity .25s ease, border-color .25s ease;
+  }
+  .code-card.active{ opacity:1; border-color:var(--placed); }
+  .code-card-head{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--text-muted);
+    padding:9px 14px;
+    border-bottom:1px solid var(--border);
+    background:var(--surface-2);
+    display:flex;
+    justify-content:space-between;
+  }
+  .code-card.active .code-card-head{ color:var(--placed); }
+  .code-body{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    line-height:1.65;
+    padding:10px 0;
+    overflow-x:auto;
+  }
+  .code-line{
+    display:flex;
+    padding:0 14px;
+    white-space:pre;
+  }
+  .code-line .ln{
+    color:var(--text-faint);
+    width:26px;
+    flex-shrink:0;
+    user-select:none;
+    text-align:right;
+    margin-right:14px;
+  }
+  .code-line .txt{ color:var(--text-muted); }
+  .code-line.hl{ background:rgba(73,184,136,0.10); border-left:2px solid var(--placed); }
+  .code-line.hl .txt{ color:var(--text); }
+  .code-line.hl .ln{ color:var(--placed); }
+
+  /* ---------- Concept section ---------- */
+  .concept-section h2{
+    font-family:var(--font-display);
+    font-size:22px;
+    margin:44px 0 12px;
+    letter-spacing:-0.005em;
+  }
+  .concept-section p{ color:var(--text-muted); font-size:15px; max-width:700px; }
+  .concept-section p code, .concept-section li code{
+    font-family:var(--font-mono); font-size:0.9em; background:var(--surface-2);
+    padding:1px 6px; border-radius:5px; color:var(--loser);
+  }
+  .callout{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent);
+    border-radius:8px;
+    padding:14px 18px;
+    font-size:14.5px;
+    color:var(--text-muted);
+    max-width:700px;
+    margin:18px 0;
+  }
+  .callout b{ color:var(--accent); }
+
+  table.jtable{ border-collapse:collapse; font-family:var(--font-mono); font-size:13px; margin:14px 0 22px; }
+  table.jtable th, table.jtable td{ border:1px solid var(--border); padding:7px 12px; text-align:left; }
+  table.jtable th{ color:var(--text-muted); font-weight:500; background:var(--surface); }
+  table.jtable td{ color:var(--text); }
+
+  footer{
+    margin-top:40px;
+    padding-top:20px;
+    border-top:1px solid var(--border);
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--text-faint);
+  }
+
+  @media (max-width:640px){
+    .row-label{ width:auto; margin-bottom:2px; }
+    .row{ flex-direction:column; align-items:flex-start; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .chip.dropping{ animation:none; }
+    *{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div class="eyebrow">cpp09 — <span>PmergeMe</span> — Ford-Johnson merge-insertion sort</div>
+    <h1>Fewer comparisons, by construction.</h1>
+    <p class="thesis">Plain insertion sort compares each new element against everything before it. This algorithm pairs numbers up first, sorts only the "winners," then slots the "losers" back in — one at a time, in an order chosen so each search only ever spans as much of the list as it could possibly need. Step through code running on a real 8-number example below.</p>
+    <div class="legend">
+      <span class="legend-item"><span class="swatch" style="background:var(--winner)"></span>winner (larger of a pair)</span>
+      <span class="legend-item"><span class="swatch" style="background:var(--loser)"></span>loser (smaller of a pair, waits to be inserted)</span>
+      <span class="legend-item"><span class="swatch" style="background:var(--placed)"></span>placed in the chain</span>
+      <span class="legend-item"><span class="swatch" style="background:var(--accent)"></span>search window / active insert</span>
+    </div>
+  </header>
+
+  <section class="stage-section">
+    <div class="stage-header">
+      <div class="step-label">Step <b id="stepNum">1</b> / <span id="stepTotal">21</span> — <b id="stepTitle"></b></div>
+      <div class="controls">
+        <button id="prevBtn">◀ Prev</button>
+        <button id="playBtn">Play</button>
+        <button id="nextBtn">Next ▶</button>
+      </div>
+    </div>
+
+    <div class="frames" id="framesContainer"></div>
+    <p class="step-desc" id="stepDesc"></p>
+    <div class="progress-dots" id="dots"></div>
+  </section>
+
+  <section class="code-section" id="codeSection">
+    <div class="code-card" id="card-sortGeneric">
+      <div class="code-card-head"><span>sortGeneric()</span><span>PmergeMe.cpp</span></div>
+      <div class="code-body" id="code-sortGeneric"></div>
+    </div>
+    <div class="code-card" id="card-insertGeneric">
+      <div class="code-card-head"><span>insertGeneric()</span><span>PmergeMe.cpp</span></div>
+      <div class="code-body" id="code-insertGeneric"></div>
+    </div>
+    <div class="code-card" id="card-jacobsthal">
+      <div class="code-card-head"><span>buildJacobsthalInsertionOrder()</span><span>PmergeMe.cpp</span></div>
+      <div class="code-body" id="code-jacobsthal"></div>
+    </div>
+  </section>
+
+  <section class="concept-section">
+    <h2>Why pair-and-recurse in the first place?</h2>
+    <p>Splitting each pair into a winner and a loser and recursively sorting only the winners means that by the time any loser needs to be inserted, most of the chain is already correctly ordered relative to that loser's own partner. The insertion is still a search — but it's a search into a list that was never touched by that element before, so nothing is wasted re-comparing things you already know.</p>
+
+    <h2>Why the Jacobsthal order, and not just 1, 2, 3…</h2>
+    <p>Inserting losers in plain order (loser 1, then 2, then 3…) works, but it lets the search windows grow one element at a time in the worst case. Jacobsthal numbers (0, 1, 1, 3, 5, 11, 21…) group insertions so each new element is inserted while the chain is still as short as binary search can make useful — and crucially, <em>within</em> each group, insertions happen from the largest index down to the smallest, so the search bound (<code>upperBound</code>) for each one is as large as possible without ever needing to search past where its own partner sits.</p>
+
+    <table class="jtable">
+      <tr><th>Level</th><th>pending losers</th><th>Jacobsthal groups used</th><th>insertion order (loser index)</th></tr>
+      <tr><td>0</td><td>3</td><td>(1,1], (1,3]</td><td>3, 2, 1</td></tr>
+      <tr><td>1</td><td>1</td><td>(1,1]<sup>*</sup></td><td>1</td></tr>
+    </table>
+    <p style="margin-top:-10px; font-size:13px;">* too small a group to matter here — with only one pending loser left, it just falls through to the leftover pass at the end of <code>buildJacobsthalInsertionOrder</code>.</p>
+
+    <h2>Why <code>insertGeneric</code> only searches part of the chain</h2>
+    <p><code>upperBound</code> isn't arbitrary — it's the position of the loser's own paired winner inside the current chain. Since a loser is always smaller than its winner, and the winner's position is already known, there is provably no reason to search anything past it. That's the actual comparison-count saving; the Jacobsthal ordering just decides <em>which</em> loser gets to exploit the largest such window first.</p>
+
+    <div class="callout">
+      <b>About that first insertion (losers[0]):</b> in this run, losers[0]'s partner (winners[0]) always happened to land at position 0 of the freshly-sorted chain, so every "insert first loser" step below needed zero comparisons. That's <em>not</em> a general guarantee — it depends entirely on where winners[0]'s value ends up after the recursive sort. Feed the algorithm different numbers and that first insertion can easily need a real binary search too. Worth keeping in mind if you're chasing an edge case around <code>losers[0]</code> specifically.
+    </div>
+
+    <h2>The example running above</h2>
+    <p>Input: <code>5 3 8 1 9 2 7 4</code> → output: <code>1 2 3 4 5 7 8 9</code>. Verified against the actual compiled <code>PmergeMe</code> binary, not hand-waved — every intermediate array shown in the steps above is the real state your code produces at that point.</p>
+  </section>
+
+  <footer>PmergeMe · std::vector / std::deque · C++98 · generated to accompany your submitted code</footer>
+</div>
+
+<script>
+/* ======================================================================
+   1. SOURCE CODE (verbatim, split into lines for highlighting)
+   ====================================================================== */
+const SRC = {
+  sortGeneric: [
+"template <typename Container>",
+"Container sortGeneric(Container cont, PmergeMe* pm)",
+"{",
+"    if (cont.size() <= 1) return (cont);",
+"",
+"    bool hasStraggler = (cont.size() % 2 == 1);",
+"    unsigned int straggler = 0;",
+"    if (hasStraggler)",
+"    {",
+"        straggler = cont.back();",
+"        cont.pop_back();",
+"    }",
+"",
+"    Container winners, losers;",
+"    for (size_t i = 0; i < cont.size() / 2; ++i)",
+"    {",
+"        unsigned int first = cont[2 * i], second = cont[2 * i + 1];",
+"        losers.push_back(std::min(first, second));",
+"        winners.push_back(std::max(first, second));",
+"    }",
+"",
+"    Container mainChain = sortGeneric(winners, pm);",
+"    Container sorted(mainChain.begin(), mainChain.end());",
+"",
+"    {",
+"        typename Container::iterator partnerPos = std::find(sorted.begin(), sorted.end(), winners[0]);",
+"        insertGeneric(sorted, losers[0], std::distance(sorted.begin(), partnerPos));",
+"    }",
+"",
+"    std::vector<size_t> order = pm->buildJacobsthalInsertionOrder(losers.size() - 1);",
+"    for (size_t i = 0; i < order.size(); ++i)",
+"    {",
+"        size_t idx = order[i] + 1;",
+"        typename Container::iterator partnerPos = std::find(sorted.begin(), sorted.end(), winners[idx]);",
+"        insertGeneric(sorted, losers[idx], std::distance(sorted.begin(), partnerPos));",
+"    }",
+"",
+"    if (hasStraggler)",
+"        insertGeneric(sorted, straggler, sorted.size());",
+"",
+"    return (sorted);",
+"}"
+  ],
+  insertGeneric: [
+"template <typename Container>",
+"void insertGeneric(Container &sorted, unsigned int value, size_t upperBound)",
+"{",
+"    upperBound = std::min(upperBound, sorted.size());",
+"    typename Container::iterator pos = std::lower_bound(",
+"            sorted.begin(), sorted.begin() + upperBound, value);",
+"    sorted.insert(pos, value);",
+"}"
+  ],
+  jacobsthal: [
+"std::vector<size_t> PmergeMe::buildJacobsthalInsertionOrder(size_t pendCount)",
+"{",
+"    std::vector<size_t> order;",
+"    if (pendCount == 0) return (order);",
+"",
+"    std::vector<bool> used(pendCount, false);",
+"    std::vector<size_t> jacobsthal;",
+"    jacobsthal.push_back(0);",
+"    jacobsthal.push_back(1);",
+"",
+"    while (jacobsthal.back() < pendCount + 2)",
+"    {",
+"        size_t n = jacobsthal.size();",
+"        jacobsthal.push_back(jacobsthal[n - 1] + 2 * jacobsthal[n - 2]);",
+"    }",
+"",
+"    size_t prevJ = 1;",
+"    for (size_t k = 2; k < jacobsthal.size(); ++k)",
+"    {",
+"        size_t currJ = std::min(jacobsthal[k], pendCount);",
+"        for (size_t idx = currJ; idx > prevJ; --idx)",
+"        {",
+"            if (idx - 1 < pendCount && !used[idx - 1])",
+"            {",
+"                order.push_back(idx - 1);",
+"                used[idx - 1] = true;",
+"            }",
+"        }",
+"        if (currJ >= pendCount) break;",
+"        prevJ = currJ;",
+"    }",
+"",
+"    for (size_t i = 0; i < pendCount; ++i)",
+"    {",
+"        if (!used[i]) order.push_back(i);",
+"    }",
+"    return (order);",
+"}"
+  ]
+};
+
+/* ======================================================================
+   2. BUILD THE STEP SCRIPT for input [5, 3, 8, 1, 9, 2, 7, 4]
+      (verified against the compiled PmergeMe binary)
+   ====================================================================== */
+const steps = [];
+let frames = [null, null, null]; // level 0, 1, 2
+
+function snap(){ return JSON.parse(JSON.stringify(frames)); }
+function addStep(level, phase, desc, codeFocus, codeLines, extra){
+  steps.push({
+    level, phase, desc, codeFocus,
+    codeLines: codeLines || [],
+    extra: extra || {},
+    frames: snap()
+  });
+}
+
+// ---- Level 0 ----
+frames[0] = { n:8, arr:[5,3,8,1,9,2,7,4] };
+addStep(0, 'start', "8 numbers, even count — no straggler to set aside this round.", 'sortGeneric', [3,5]);
+
+frames[0] = { n:8, winners:[5,8,9,7], losers:[3,1,2,4] };
+addStep(0, 'pair', "Pair up neighbors and split each pair: the larger becomes a <code>winner</code>, the smaller a <code>loser</code> waiting to be inserted later.", 'sortGeneric', [13,14,15,16,17,18,19]);
+
+addStep(0, 'recurse-down', "Before touching any loser, recursively sort the winners themselves — <code>sortGeneric(winners)</code>. Nothing here can be finished until that call returns.", 'sortGeneric', [21]);
+
+// ---- Level 1 ----
+frames[1] = { n:4, arr:[5,8,9,7] };
+addStep(1, 'start', "One level down: 4 winners from above, still even.", 'sortGeneric', [3,5]);
+
+frames[1] = { n:4, winners:[8,9], losers:[5,7] };
+addStep(1, 'pair', "Same trick again: pair, split into winners and losers.", 'sortGeneric', [13,14,15,16,17,18,19]);
+
+addStep(1, 'recurse-down', "Recurse again on the winners <code>[8, 9]</code> before doing anything else at this level.", 'sortGeneric', [21]);
+
+// ---- Level 2 ----
+frames[2] = { n:2, arr:[8,9] };
+addStep(2, 'start', "2 elements — still above the base case, so it goes through the same pairing step once more.", 'sortGeneric', [3,5]);
+
+frames[2] = { n:2, winners:[9], losers:[8] };
+addStep(2, 'pair', "Only one pair possible: winner 9, loser 8.", 'sortGeneric', [13,14,15,16,17,18,19]);
+
+frames[2] = { ...frames[2], chain:[9] };
+addStep(2, 'recurse-down', "Recurse on <code>[9]</code> — a single element is trivially sorted, <code>cont.size() &lt;= 1</code> returns immediately. This is the bottom of the recursion.", 'sortGeneric', [3]);
+
+frames[2] = { ...frames[2], chain:[8,9] };
+addStep(2, 'insert-first', "Insert <code>losers[0] = 8</code>. Its partner <code>winners[0] = 9</code> sits at position 0 of the chain, so <code>upperBound = 0</code> — nothing to search, it just goes first.", 'sortGeneric', [24,25,26,27],
+  { insertValue:8, partnerValue:9, upperBound:0, insertPos:0, chainBefore:[9] });
+
+frames[2] = { ...frames[2], phase:'done' };
+addStep(2, 'done', "Only one pair existed at this level, so there's nothing left to place. Level 2 is fully sorted — <code>[8, 9]</code> returns up to level 1 as its <code>mainChain</code>.", 'sortGeneric', [40]);
+
+// ---- back to Level 1 ----
+frames[1] = { ...frames[1], chain:[8,9] };
+addStep(1, 'insert-first', "Back at level 1 with <code>mainChain = [8, 9]</code>. Insert <code>losers[0] = 5</code>: partner <code>winners[0] = 8</code> is at position 0, so again <code>upperBound = 0</code>.", 'sortGeneric', [24,25,26,27],
+  { insertValue:5, partnerValue:8, upperBound:0, insertPos:0, chainBefore:[8,9] });
+frames[1] = { ...frames[1], chain:[5,8,9] };
+
+addStep(1, 'jacobsthal', "1 loser left (<code>losers[1] = 7</code>). <code>buildJacobsthalInsertionOrder(1)</code> has nothing to group — it falls straight to the leftover pass and returns index 0, meaning: insert <code>losers[1]</code> next.", 'jacobsthal', [30,31,32,33],
+  { pendCount:1, order:[0], pendingValues:[7] });
+
+addStep(1, 'insert', "Insert <code>losers[1] = 7</code>. Partner <code>winners[1] = 9</code> is at position 2 in <code>[5, 8, 9]</code>, so the search is bounded to the first 2 elements: <code>[5, 8]</code>.", 'insertGeneric', [3,4,5,6],
+  { insertValue:7, partnerValue:9, upperBound:2, insertPos:1, chainBefore:[5,8,9] });
+frames[1] = { ...frames[1], chain:[5,7,8,9] };
+
+frames[1] = { ...frames[1], phase:'done' };
+addStep(1, 'done', "No straggler at this level either. Level 1 is fully sorted — <code>[5, 7, 8, 9]</code> returns up to level 0.", 'sortGeneric', [40]);
+
+// ---- back to Level 0 ----
+frames[0] = { ...frames[0], chain:[5,7,8,9] };
+addStep(0, 'insert-first', "Back at level 0 with <code>mainChain = [5, 7, 8, 9]</code>. Insert <code>losers[0] = 3</code>: partner <code>winners[0] = 5</code> is at position 0, so <code>upperBound = 0</code> once more.", 'sortGeneric', [24,25,26,27],
+  { insertValue:3, partnerValue:5, upperBound:0, insertPos:0, chainBefore:[5,7,8,9] });
+frames[0] = { ...frames[0], chain:[3,5,7,8,9] };
+
+addStep(0, 'jacobsthal', "3 losers left (<code>losers[1..3] = 1, 2, 4</code>). <code>buildJacobsthalInsertionOrder(3)</code> groups them using Jacobsthal windows (1,1] then (1,3], inserting each window highest-index-first — giving the order 3, 2, 1.", 'jacobsthal', [16,17,18,19,20,21,22,23,24,25,26,27,28],
+  { pendCount:3, order:[2,1,0], pendingValues:[4,2,1] });
+
+addStep(0, 'insert', "Insert <code>losers[3] = 4</code> first. Partner <code>winners[3] = 7</code> is at position 2 in <code>[3, 5, 7, 8, 9]</code> — search bounded to <code>[3, 5]</code>.", 'insertGeneric', [3,4,5,6],
+  { insertValue:4, partnerValue:7, upperBound:2, insertPos:1, chainBefore:[3,5,7,8,9] });
+frames[0] = { ...frames[0], chain:[3,4,5,7,8,9] };
+
+addStep(0, 'insert', "Next, <code>losers[2] = 2</code>. Partner <code>winners[2] = 9</code> is at position 5 in <code>[3, 4, 5, 7, 8, 9]</code> — search bounded to <code>[3, 4, 5, 7, 8]</code>.", 'insertGeneric', [3,4,5,6],
+  { insertValue:2, partnerValue:9, upperBound:5, insertPos:0, chainBefore:[3,4,5,7,8,9] });
+frames[0] = { ...frames[0], chain:[2,3,4,5,7,8,9] };
+
+addStep(0, 'insert', "Finally, <code>losers[1] = 1</code>. Partner <code>winners[1] = 8</code> is at position 5 in <code>[2, 3, 4, 5, 7, 8, 9]</code> — search bounded to <code>[2, 3, 4, 5, 7]</code>.", 'insertGeneric', [3,4,5,6],
+  { insertValue:1, partnerValue:8, upperBound:5, insertPos:0, chainBefore:[2,3,4,5,7,8,9] });
+frames[0] = { ...frames[0], chain:[1,2,3,4,5,7,8,9] };
+
+frames[0] = { ...frames[0], phase:'done' };
+addStep(0, 'done', "No straggler at the top level (8 is even). Sorting complete: <code>[1, 2, 3, 4, 5, 7, 8, 9]</code>.", 'sortGeneric', [40]);
+
+/* ======================================================================
+   3. RENDERING
+   ====================================================================== */
+const framesEl = document.getElementById('framesContainer');
+const stepDescEl = document.getElementById('stepDesc');
+const stepNumEl = document.getElementById('stepNum');
+const stepTitleEl = document.getElementById('stepTitle');
+const dotsEl = document.getElementById('dots');
+document.getElementById('stepTotal').textContent = steps.length;
+
+const LEVEL_LABELS = ['Level 0 — top call', 'Level 1 — recursion', 'Level 2 — recursion'];
+
+function chip(value, cls, extraCls){
+  const d = document.createElement('div');
+  d.className = 'chip ' + cls + (extraCls ? ' ' + extraCls : '');
+  d.textContent = value;
+  return d;
+}
+
+function row(label, children){
+  const r = document.createElement('div');
+  r.className = 'row';
+  const l = document.createElement('div');
+  l.className = 'row-label';
+  l.textContent = label;
+  const c = document.createElement('div');
+  c.className = 'chips';
+  children.forEach(ch => c.appendChild(ch));
+  r.appendChild(l);
+  r.appendChild(c);
+  return r;
+}
+
+function renderChainRow(label, chainBefore, extra){
+  const cells = [];
+  const upperBound = extra.upperBound;
+  const insertPos = extra.insertPos;
+  const hasInsert = extra.insertValue !== undefined;
+
+  chainBefore.forEach((v, i) => {
+    if (hasInsert && i === insertPos){
+      cells.push(chip(extra.insertValue, 'dropping'));
+    }
+    const inWindow = hasInsert && upperBound !== undefined && i < upperBound;
+    const isBoundary = hasInsert && upperBound !== undefined && i === upperBound && upperBound < chainBefore.length;
+    cells.push(chip(v, 'placed', (inWindow ? 'window' : '') + (isBoundary ? ' boundary' : '')));
+  });
+  if (hasInsert && insertPos === chainBefore.length){
+    cells.push(chip(extra.insertValue, 'dropping'));
+  }
+  return row(label, cells);
+}
+
+function renderFrame(f, level, isActive, step){
+  const card = document.createElement('div');
+  card.className = 'frame' + (isActive ? ' active' : '');
+
+  const title = document.createElement('div');
+  title.className = 'frame-title';
+  title.innerHTML = LEVEL_LABELS[level] + (f.n ? ` <span class="frame-badge">n = ${f.n}</span>` : '');
+  card.appendChild(title);
+
+  if (f.arr){
+    card.appendChild(row('array', f.arr.map(v => chip(v, 'neutral'))));
+  }
+  if (f.winners){
+    card.appendChild(row('winners', f.winners.map(v => chip(v, 'winner'))));
+    card.appendChild(row('losers', f.losers.map(v => chip(v, 'loser'))));
+  }
+
+  if (isActive && step.phase === 'jacobsthal'){
+    const note = document.createElement('div');
+    note.className = 'arrow-note';
+    note.innerHTML = `pendCount = <b>${step.extra.pendCount}</b> → insertion order (rank shown): `;
+    card.appendChild(note);
+    const cells = step.extra.pendingValues.map((v,i) => {
+      const c = chip(v, 'loser', 'rank');
+      const badge = document.createElement('span');
+      badge.className = 'rank-badge';
+      badge.textContent = i+1;
+      c.prepend(badge);
+      return c;
+    });
+    card.appendChild(row('queue', cells));
+  }
+
+  if (f.chain){
+    if (isActive && (step.phase === 'insert-first' || step.phase === 'insert')){
+      card.appendChild(renderChainRow('chain', step.extra.chainBefore, step.extra));
+      const note = document.createElement('div');
+      note.className = 'arrow-note';
+      note.innerHTML = `partner <b>${step.extra.partnerValue}</b> found at position <b>${step.extra.upperBound === step.extra.chainBefore.length ? step.extra.upperBound : step.extra.upperBound}</b> → upperBound = <b>${step.extra.upperBound}</b>, search only the first ${step.extra.upperBound} element(s)`;
+      card.appendChild(note);
+    } else {
+      card.appendChild(row('chain', f.chain.map(v => chip(v, 'placed'))));
+    }
+  }
+
+  if (isActive && (step.phase === 'recurse-down')){
+    const note = document.createElement('div');
+    note.className = 'arrow-note';
+    note.textContent = '↓ recursing into the winners shown above';
+    card.appendChild(note);
+  }
+  if (isActive && step.phase === 'done'){
+    const note = document.createElement('div');
+    note.className = 'arrow-note';
+    note.textContent = '↑ returning this chain to the caller';
+    card.appendChild(note);
+  }
+
+  return card;
+}
+
+function renderCode(){
+  ['sortGeneric','insertGeneric','jacobsthal'].forEach(fn => {
+    const body = document.getElementById('code-' + fn);
+    body.innerHTML = '';
+    SRC[fn].forEach((line, i) => {
+      const l = document.createElement('div');
+      l.className = 'code-line';
+      l.dataset.line = i;
+      const ln = document.createElement('span');
+      ln.className = 'ln';
+      ln.textContent = i+1;
+      const txt = document.createElement('span');
+      txt.className = 'txt';
+      txt.textContent = line.length ? line : ' ';
+      l.appendChild(ln);
+      l.appendChild(txt);
+      body.appendChild(l);
+    });
+  });
+}
+renderCode();
+
+function highlightCode(focusFn, lines){
+  ['sortGeneric','insertGeneric','jacobsthal'].forEach(fn => {
+    const card = document.getElementById('card-' + fn);
+    card.classList.toggle('active', fn === focusFn);
+    document.querySelectorAll('#code-' + fn + ' .code-line').forEach(el => {
+      const idx = Number(el.dataset.line);
+      el.classList.toggle('hl', fn === focusFn && lines.includes(idx));
+    });
+  });
+}
+
+let current = 0;
+let playing = false;
+let playTimer = null;
+
+function render(){
+  const step = steps[current];
+  stepNumEl.textContent = current + 1;
+  stepTitleEl.textContent = LEVEL_LABELS[step.level] + ' · ' + step.phase.replace('-', ' ');
+  stepDescEl.innerHTML = step.desc;
+
+  framesEl.innerHTML = '';
+  step.frames.forEach((f, level) => {
+    if (f) framesEl.appendChild(renderFrame(f, level, level === step.level, step));
+  });
+
+  highlightCode(step.codeFocus, step.codeLines);
+
+  dotsEl.innerHTML = '';
+  steps.forEach((s, i) => {
+    const d = document.createElement('button');
+    d.className = 'dot' + (i === current ? ' current' : i < current ? ' done' : '');
+    d.setAttribute('aria-label', 'Go to step ' + (i+1));
+    d.addEventListener('click', () => { current = i; render(); });
+    dotsEl.appendChild(d);
+  });
+
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === steps.length - 1;
+  if (current === steps.length - 1) stopPlaying();
+}
+
+function stopPlaying(){
+  playing = false;
+  document.getElementById('playBtn').textContent = 'Play';
+  if (playTimer) clearInterval(playTimer);
+}
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if (current > 0){ current--; render(); }
+});
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if (current < steps.length - 1){ current++; render(); }
+});
+document.getElementById('playBtn').addEventListener('click', () => {
+  if (playing){ stopPlaying(); return; }
+  playing = true;
+  document.getElementById('playBtn').textContent = 'Pause';
+  playTimer = setInterval(() => {
+    if (current < steps.length - 1){ current++; render(); }
+    else stopPlaying();
+  }, 2400);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') document.getElementById('nextBtn').click();
+  if (e.key === 'ArrowLeft') document.getElementById('prevBtn').click();
+});
+
+render();
+</script>
+</body>
+</html>
